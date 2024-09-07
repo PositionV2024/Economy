@@ -1,6 +1,9 @@
 package com.clarence.economy.Command;
 
+import com.clarence.ToolHelper.Configuration;
 import com.clarence.ToolHelper.Util;
+import com.clarence.ToolHelper.uuid;
+import com.technicjelle.UpdateChecker;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -19,24 +22,38 @@ public class Balance implements CommandExecutor {
         }
 
         if (args.length == 0) {
-            player.sendMessage(Util.setMessage("USAGE: /BALANCE", true, true));
+            if (!uuid.getUUID().containsKey(player.getUniqueId())) {
+                uuid.getUUID().put(player.getUniqueId(), 0);
+            }
+
+            player.sendMessage(Util.setMessage("Your balance is " + uuid.getUUID().get(player.getUniqueId()), true, true));
             return true;
         }
 
         switch (args[0].toLowerCase()) {
             case "version":
-                try {
-                    if (!Util.getEconomyPlugin().getUpdateChecker().isUpdateAvailable()) {
-                        player.sendMessage(Util.setMessage("Your current version is " + Util.getEconomyPlugin().getDescription().getVersion(), true, true));
-                        return true;
-                    }
-                    player.sendMessage(Util.setMessage("Your on an outdated version. Please download the newest version here: " + Util.getEconomyPlugin().getUpdateChecker().getUpdateUrl(), true, true));
-                } catch (CompletionException e) {
-                   player.sendMessage(Util.setMessage("COULD NOT FETCH THE LATEST UPDATE", true, true));
-                }
+                versionCheck(player);
+                break;
+            case "reload":
+                Configuration.reloadFiles(player);
+                break;
+            default:
+                player.sendMessage(Util.setMessage("USAGE: balance | version | reload", true, true));
                 break;
         }
 
         return false;
+    }
+    private void versionCheck(Player player) {
+        UpdateChecker updateChecker = Util.getEconomyPlugin().getUpdateChecker();
+        try {
+            if (!updateChecker.isUpdateAvailable()) {
+                player.sendMessage(Util.setMessage("Your current version is " + updateChecker.getCurrentVersion(), true, true));
+                return;
+            }
+            player.sendMessage(Util.setMessage("Your current version is " + updateChecker.getCurrentVersion() + "\nPlease download the newest version " + updateChecker.getLatestVersion() + "here: " + updateChecker.getUpdateUrl(), true, true));
+        } catch (CompletionException e) {
+            player.sendMessage(Util.setMessage("COULD NOT FETCH THE LATEST UPDATE", true, true));
+        }
     }
 }

@@ -1,5 +1,6 @@
 package com.clarence.economy;
 
+import com.clarence.ToolHelper.Configuration;
 import com.clarence.ToolHelper.GithubInfo;
 import com.clarence.ToolHelper.Util;
 import com.clarence.economy.Command.Balance;
@@ -20,6 +21,9 @@ public final class Economy extends JavaPlugin {
         } catch (CompletionException e) {
             System.out.println(Util.setMessage("COULD NOT FETCH THE LATEST UPDATE", false, false));
         }
+
+        new Configuration();
+
         getCommand("balance").setExecutor(new Balance());
     }
 

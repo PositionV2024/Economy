@@ -1,6 +1,5 @@
 package com.technicjelle;
 
-import com.clarence.ToolHelper.GithubInfo;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
