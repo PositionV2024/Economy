@@ -22,11 +22,11 @@ public class Balance implements CommandExecutor {
         }
 
         if (args.length == 0) {
-            if (!uuid.getUUID().containsKey(player.getUniqueId())) {
-                uuid.getUUID().put(player.getUniqueId(), 0);
+            if (Configuration.getBalanceConfiguration().get(player.getUniqueId().toString()) == null) {
+                Configuration.GenerateNewData(player);
+            } else {
+                FetchedData(player);
             }
-
-            player.sendMessage(Util.setMessage("Your balance is " + uuid.getUUID().get(player.getUniqueId()), true, true));
             return true;
         }
 
@@ -43,6 +43,12 @@ public class Balance implements CommandExecutor {
         }
 
         return false;
+    }
+    private void FetchedData(Player player){
+        int Money = Configuration.getBalanceConfiguration().getConfigurationSection(player.getUniqueId().toString()).getInt("Money");
+        uuid.getUUID().put(player.getUniqueId(), Money);
+
+        player.sendMessage(Util.setMessage("Your balance is " + uuid.getUUID().get(player.getUniqueId()), true, true));
     }
     private void versionCheck(Player player) {
         UpdateChecker updateChecker = Util.getEconomyPlugin().getUpdateChecker();

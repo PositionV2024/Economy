@@ -5,6 +5,7 @@ import com.clarence.ToolHelper.GithubInfo;
 import com.clarence.ToolHelper.Util;
 import com.clarence.economy.Command.Balance;
 import com.technicjelle.UpdateChecker;
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.concurrent.CompletionException;
@@ -24,6 +25,7 @@ public final class Economy extends JavaPlugin {
 
         new Configuration();
 
+        Bukkit.getPluginManager().registerEvents(new listener(), this);
         getCommand("balance").setExecutor(new Balance());
     }
 
