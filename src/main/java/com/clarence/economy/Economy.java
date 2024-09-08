@@ -4,6 +4,7 @@ import com.clarence.ToolHelper.Configuration;
 import com.clarence.ToolHelper.GithubInfo;
 import com.clarence.ToolHelper.Util;
 import com.clarence.economy.Command.Balance;
+import com.clarence.economy.Command.Shop;
 import com.technicjelle.UpdateChecker;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -27,6 +28,7 @@ public final class Economy extends JavaPlugin {
 
         Bukkit.getPluginManager().registerEvents(new listener(), this);
         getCommand("balance").setExecutor(new Balance());
+        getCommand("shop").setExecutor(new Shop());
     }
 
     @Override

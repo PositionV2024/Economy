@@ -94,8 +94,8 @@ public class Configuration {
     private String getFileName(String name) { return name + ".yml"; }
     public static void GenerateNewData(Player player) {
         ConfigurationSection configurationSection = Configuration.getBalanceConfiguration().createSection(String.valueOf(player.getUniqueId()));
+        configurationSection.set("Name", player.getDisplayName());
         configurationSection.set("Money", 0);
-
         Configuration.saveConfiguration(Configuration.getBalanceFile(), Configuration.getBalanceConfiguration());
         player.sendMessage(Util.setMessage("Generated a new data for " + player.getDisplayName(), true, true));
     }

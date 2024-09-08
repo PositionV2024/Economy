@@ -4,3 +4,6 @@ main: com.clarence.economy.Economy
 api-version: '1.21'
 commands:
   balance:
+    description: Take a brief look at how much money you have in your account.
+  shop:
+    description: Shop for items in the store.

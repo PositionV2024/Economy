@@ -7,9 +7,12 @@ import com.technicjelle.UpdateChecker;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletionException;
 
 public class Balance implements CommandExecutor {
@@ -37,8 +40,11 @@ public class Balance implements CommandExecutor {
             case "reload":
                 Configuration.reloadFiles(player);
                 break;
+            case "clear":
+                clearBalance(player, args);
+                break;
             default:
-                player.sendMessage(Util.setMessage("USAGE: balance | version | reload", true, true));
+                player.sendMessage(Util.setMessage("USAGE: balance | clear | version | reload", true, true));
                 break;
         }
 
@@ -48,7 +54,7 @@ public class Balance implements CommandExecutor {
         int Money = Configuration.getBalanceConfiguration().getConfigurationSection(player.getUniqueId().toString()).getInt("Money");
         uuid.getUUID().put(player.getUniqueId(), Money);
 
-        player.sendMessage(Util.setMessage("Your balance is " + uuid.getUUID().get(player.getUniqueId()), true, true));
+        player.sendMessage(Util.setMessage("Your balance is $" + uuid.getUUID().get(player.getUniqueId()), true, true));
     }
     private void versionCheck(Player player) {
         UpdateChecker updateChecker = Util.getEconomyPlugin().getUpdateChecker();
@@ -60,6 +66,32 @@ public class Balance implements CommandExecutor {
             player.sendMessage(Util.setMessage("Your current version is " + updateChecker.getCurrentVersion() + "\nPlease download the newest version " + updateChecker.getLatestVersion() + "here: " + updateChecker.getUpdateUrl(), true, true));
         } catch (CompletionException e) {
             player.sendMessage(Util.setMessage("COULD NOT FETCH THE LATEST UPDATE", true, true));
+        }
+    }
+    private void clearBalance(Player player, String[] args) {
+        if (args.length == 1) {
+            player.sendMessage(Util.setMessage("USAGE: all | mine", true, true));
+            return;
+        }
+        List<String> balanceList = new ArrayList<>(Configuration.getBalanceConfiguration().getKeys(false));
+
+        switch (args[1].toLowerCase()) {
+            case "all":
+                for (int i = 0; i < balanceList.size(); i++) {
+                    String name = balanceList.get(i);
+
+                    ConfigurationSection configurationSection = Configuration.getBalanceConfiguration().getConfigurationSection(name);
+                    configurationSection.set("Money", 0);
+                }
+                Configuration.saveConfiguration(Configuration.getBalanceFile(), Configuration.getBalanceConfiguration());
+                player.sendMessage(Util.setMessage("Cleared all balances", true, true));
+                break;
+            case "mine":
+                ConfigurationSection configurationSection = Configuration.getBalanceConfiguration().getConfigurationSection(String.valueOf(player.getUniqueId()));
+                configurationSection.set("Money", 0);
+                Configuration.saveConfiguration(Configuration.getBalanceFile(), Configuration.getBalanceConfiguration());
+                player.sendMessage(Util.setMessage("Cleared your balance", true, true));
+                break;
         }
     }
 }
