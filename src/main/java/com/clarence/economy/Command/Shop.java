@@ -31,11 +31,35 @@ public class Shop implements CommandExecutor {
             case "sell":
                 handleSell(player, args);
                 break;
+            case "check":
+                itemCheck(player, args);
+                break;
             case "add":
                 addItemsToConfig(player, args);
                 break;
         }
         return false;
+    }
+
+    private void itemCheck(Player player, String[] args) {
+        if (args.length == 1) {
+            player.sendMessage(Util.setMessage("Please specific which item to check", true, true));
+            return;
+        }
+
+        if (Configuration.getItemsConfiguration().getConfigurationSection(args[1]) == null) {
+            player.sendMessage(Util.setMessage("Item doesn't exist", true, true));
+            return;
+        }
+
+        ConfigurationSection configurationSection = Configuration.getItemsConfiguration().getConfigurationSection(args[1]);
+        String itemMaterial = configurationSection.getString("Material");
+        int itemPrice = configurationSection.getInt("Price");
+        String itemInfo = "Item material: " + itemMaterial + " Item price: $" + itemPrice;
+
+        player.sendMessage(Util.setMessage(itemInfo, true, true));
+
+
     }
 
     private void addItemsToConfig(Player player, String[] args) {
@@ -75,7 +99,6 @@ public class Shop implements CommandExecutor {
             player.sendMessage(Util.setMessage("MATERIAL CANNOT BE FOUND", true, true));
             return;
         }
-        ConfigurationSection ItemsConfigurationSection = Configuration.getItemsConfiguration().getConfigurationSection(args[1]);
 
         if (args.length == 2) {
             player.sendMessage(Util.setMessage("Please specify the quality you want to buy", true, true));
@@ -83,27 +106,36 @@ public class Shop implements CommandExecutor {
         }
 
         try {
-            Integer.parseInt(args[2]);
+            int quality = Integer.parseInt(args[2]);
         } catch (NumberFormatException e) {
             e.getStackTrace();
             player.sendMessage(Util.setMessage("INVALID QUAlITY", true, true));
             return;
         }
 
+        ConfigurationSection ItemsConfigurationSection = Configuration.getItemsConfiguration().getConfigurationSection(args[1]);
         ConfigurationSection balanceConfigurationSection = Configuration.getBalanceConfiguration().getConfigurationSection(player.getUniqueId().toString());
 
+        int itemQuantity = Integer.parseInt(args[2]);
         int price = ItemsConfigurationSection.getInt("Price");
 
-        if (balanceConfigurationSection.getInt("Money") <= price) {
-            player.sendMessage(Util.setMessage("You have insufficient funds", true, true));
-            return;
-        }
-        int Money = balanceConfigurationSection.getInt("Money", 0) - price;
-        balanceConfigurationSection.set("Money", Money);
+        int quantityPrice = price * itemQuantity;
 
-        ItemStack itemStack = Util.getItemStack(Material.matchMaterial(args[1]), Integer.parseInt(args[2]), args[1], "");
-        player.getInventory().addItem(itemStack);
-        player.sendMessage(Util.setMessage("You bought x" + args[2] + " " + args[1].toLowerCase() + " for $" + price, true, true));
+        if (itemQuantity != 0) {
+            if (balanceConfigurationSection.getInt("Money") < quantityPrice) {
+                player.sendMessage(Util.setMessage("You have insufficient funds to buy " + args[1].toLowerCase(), true, true));
+                return;
+            }
+            ItemStack itemStack = Util.getItemStack(Material.matchMaterial(args[1]), itemQuantity, args[1], "");
+            player.getInventory().addItem(itemStack);
+            int Money = balanceConfigurationSection.getInt("Money", 0) - quantityPrice;
+            balanceConfigurationSection.set("Money", Money);
+            player.sendMessage(Util.setMessage("You bought x" + itemQuantity + " " + args[1] + " for $" + quantityPrice, true, true));
+        } else {
+            player.sendMessage(Util.setMessage("You cannot buy 0 " + args[1].toLowerCase(), true, true));
+        }
+
+        Configuration.saveConfiguration(Configuration.getBalanceFile(), Configuration.getBalanceConfiguration());
     }
     private void handleSell(Player player, String[] args) {
         try {
@@ -114,6 +146,7 @@ public class Shop implements CommandExecutor {
             return;
         }
         ItemStack itemInMainHandItemStack = player.getInventory().getItemInMainHand();
+        player.sendMessage(Util.setMessage(itemInMainHandItemStack.getType().toString(), true, true));
 
         String itemName = itemInMainHandItemStack.getItemMeta().getItemName();
 
@@ -130,19 +163,19 @@ public class Shop implements CommandExecutor {
             return;
         }
 
-        int itemRemoveAmount = Integer.parseInt(args[1]);
-        int finalAmount = itemInMainHandItemStack.getAmount() - itemRemoveAmount;
+        int itemQuantity = Integer.parseInt(args[1]);
+        int finalAmount = itemInMainHandItemStack.getAmount() - itemQuantity;
 
-        if (itemInMainHandItemStack.getAmount() < itemRemoveAmount) {
+        if (itemInMainHandItemStack.getAmount() < itemQuantity) {
             player.sendMessage(Util.setMessage("Insufficient item amount", true, true));
             return;
         }
 
         itemInMainHandItemStack.setAmount(finalAmount);
 
-        player.sendMessage(Util.setMessage("You have sold x" + itemRemoveAmount + " " +  itemName, true, true));
+        player.sendMessage(Util.setMessage("You have sold x" + itemQuantity + " " +  itemName, true, true));
         ConfigurationSection configurationSection = Configuration.getBalanceConfiguration().getConfigurationSection(String.valueOf(player.getUniqueId()));
-        int money = getMoney(configurationSection, player, itemRemoveAmount);
+        int money = getMoney(configurationSection, player, itemQuantity);
         configurationSection.set("Money", money);
         Configuration.saveConfiguration(Configuration.getBalanceFile(), Configuration.getBalanceConfiguration());
     }
