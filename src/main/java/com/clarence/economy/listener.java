@@ -13,7 +13,7 @@ public class listener implements Listener {
         Player player = event.getPlayer();
 
         if (Configuration.getBalanceConfiguration().get(player.getUniqueId().toString()) == null) {
-            Configuration.GenerateNewData(player);
+            Configuration.GenerateNewBalanceData(player);
         }
     }
 }

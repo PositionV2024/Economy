@@ -31,21 +31,51 @@ public class Shop implements CommandExecutor {
             case "sell":
                 handleSell(player, args);
                 break;
+            case "add":
+                addItemsToConfig(player, args);
+                break;
         }
         return false;
     }
+
+    private void addItemsToConfig(Player player, String[] args) {
+        String itemPath = Configuration.getItemsFile().getPath();
+        if (args.length == 1) {
+            player.sendMessage(Util.setMessage("Please specific a material to add to " + itemPath, true, true));
+            return;
+        }
+
+        if (Configuration.getItemsConfiguration().getConfigurationSection(args[1]) == null) {
+            Material material = null;
+            try {
+               material = Material.valueOf(args[1]);
+            } catch (IllegalArgumentException e) {
+                e.getStackTrace();
+                player.sendMessage(Util.setMessage("Please add a material to " + itemPath, true, true));
+                return;
+            }
+            Configuration.GenerateNewItemData(player, material);
+
+        } else {
+            player.sendMessage(Util.setMessage(args[1] + " is already added to " + itemPath, true, true));
+        }
+    }
+
     private void handleBuy(Player player, String[] args) {
         if (args.length == 1) {
             player.sendMessage(Util.setMessage("Please specify the item you want to buy", true, true));
             return;
         }
         try {
-            Material.valueOf(args[1]);
-        } catch (IllegalArgumentException e) {
+            ConfigurationSection configurationSection = Configuration.getItemsConfiguration().getConfigurationSection(args[1]);
+
+            Material.valueOf(String.valueOf(configurationSection.getString("Material")));
+        } catch (NullPointerException e) {
             e.getStackTrace();
             player.sendMessage(Util.setMessage("MATERIAL CANNOT BE FOUND", true, true));
             return;
         }
+        ConfigurationSection ItemsConfigurationSection = Configuration.getItemsConfiguration().getConfigurationSection(args[1]);
 
         if (args.length == 2) {
             player.sendMessage(Util.setMessage("Please specify the quality you want to buy", true, true));
@@ -60,9 +90,20 @@ public class Shop implements CommandExecutor {
             return;
         }
 
+        ConfigurationSection balanceConfigurationSection = Configuration.getBalanceConfiguration().getConfigurationSection(player.getUniqueId().toString());
+
+        int price = ItemsConfigurationSection.getInt("Price");
+
+        if (balanceConfigurationSection.getInt("Money") <= price) {
+            player.sendMessage(Util.setMessage("You have insufficient funds", true, true));
+            return;
+        }
+        int Money = balanceConfigurationSection.getInt("Money", 0) - price;
+        balanceConfigurationSection.set("Money", Money);
+
         ItemStack itemStack = Util.getItemStack(Material.matchMaterial(args[1]), Integer.parseInt(args[2]), args[1], "");
         player.getInventory().addItem(itemStack);
-        player.sendMessage(Util.setMessage("You bought x" + args[2] + " " + args[1].toLowerCase(), true, true));
+        player.sendMessage(Util.setMessage("You bought x" + args[2] + " " + args[1].toLowerCase() + " for $" + price, true, true));
     }
     private void handleSell(Player player, String[] args) {
         try {

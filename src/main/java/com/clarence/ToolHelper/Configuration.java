@@ -1,6 +1,7 @@
 package com.clarence.ToolHelper;
 
 import com.clarence.economy.Economy;
+import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -8,20 +9,35 @@ import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Configuration {
     private static final Economy EconomyPlugin = Util.getEconomyPlugin();
 
     private static File balanceFile = null;
     private static FileConfiguration balanceConfiguration = null;
+    private static File itemsFile = null;
+    private static FileConfiguration itemsConfiguration = null;
+    private static List<File> files = new ArrayList<>();
+
     public static File getBalanceFile() {return balanceFile;}
     public static FileConfiguration getBalanceConfiguration() {return balanceConfiguration;}
+    public static File getItemsFile() {return itemsFile;}
+    public static FileConfiguration getItemsConfiguration() {return itemsConfiguration;}
 
 
     public Configuration() {
         balanceFile = getFile("Balance");
         balanceConfiguration = getConfiguration(balanceFile);
+
+        itemsFile = getFile("Items");
+        itemsConfiguration = getConfiguration(itemsFile);
+
+        files.add(balanceFile); files.add(itemsFile);
+
         saveConfiguration(balanceFile, balanceConfiguration);
+        saveConfiguration(itemsFile, itemsConfiguration);
     }
 
     private File getFile(String name) {
@@ -76,27 +92,38 @@ public class Configuration {
             return;
         }
 
-        if (balanceFile == null) {
-            System.out.println(Util.setMessage("COULD NOT FIND FILE", false, false));
-            return;
-        }
+        for (File file : files) {
+            if (file == null) {
+                System.out.println(Util.setMessage("COULD NOT FIND FILE", false, false));
+                return;
+            }
 
-        if (!balanceFile.exists()) {
-            System.out.println(Util.setMessage("COULD NOT FIND FILE", false, false));
-            return;
+            if (!file.exists()) {
+                System.out.println(Util.setMessage("COULD NOT FIND FILE", false, false));
+                return;
+            }
         }
 
         balanceConfiguration = YamlConfiguration.loadConfiguration(balanceFile);
+        itemsConfiguration = YamlConfiguration.loadConfiguration(itemsFile);
+
         System.out.println(Util.setMessage("Files have been reloaded", false, false));
         player.sendMessage(Util.setMessage("Files have been reloaded", true, true));
     }
 
     private String getFileName(String name) { return name + ".yml"; }
-    public static void GenerateNewData(Player player) {
+    public static void GenerateNewBalanceData(Player player) {
         ConfigurationSection configurationSection = Configuration.getBalanceConfiguration().createSection(String.valueOf(player.getUniqueId()));
         configurationSection.set("Name", player.getDisplayName());
         configurationSection.set("Money", 0);
         Configuration.saveConfiguration(Configuration.getBalanceFile(), Configuration.getBalanceConfiguration());
         player.sendMessage(Util.setMessage("Generated a new data for " + player.getDisplayName(), true, true));
+    }
+    public static void GenerateNewItemData(Player player, Material material) {
+        ConfigurationSection configurationSection = Configuration.getItemsConfiguration().createSection(material.name());
+        configurationSection.set("Material", material.name());
+        configurationSection.set("Price", 0);
+        Configuration.saveConfiguration(Configuration.getItemsFile(), Configuration.getItemsConfiguration());
+        player.sendMessage(Util.setMessage("Generated a new data for " + material.name(), true, true));
     }
 }

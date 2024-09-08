@@ -26,7 +26,7 @@ public class Balance implements CommandExecutor {
 
         if (args.length == 0) {
             if (Configuration.getBalanceConfiguration().get(player.getUniqueId().toString()) == null) {
-                Configuration.GenerateNewData(player);
+                Configuration.GenerateNewBalanceData(player);
             } else {
                 FetchedData(player);
             }
