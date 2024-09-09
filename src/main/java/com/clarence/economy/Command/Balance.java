@@ -2,6 +2,7 @@ package com.clarence.economy.Command;
 
 import com.clarence.ToolHelper.*;
 import com.technicjelle.UpdateChecker;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -11,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletionException;
 
 public class Balance implements CommandExecutor {
@@ -39,6 +41,9 @@ public class Balance implements CommandExecutor {
             case "clear":
                 clearBalance(player, args);
                 break;
+            case "give":
+                giveBalance(player, args);
+                break;
             case "help":
                 player.sendMessage(Util.setMessage(Messages.BALANCE_USAGE.getMessage(), true, true));
                 break;
@@ -49,11 +54,61 @@ public class Balance implements CommandExecutor {
 
         return false;
     }
+
+    private void giveBalance(Player player, String[] args) {
+        if (args.length == 1) {
+            player.sendMessage(Util.setMessage(Messages.BALANCE_GIVE_PLAYER_DOESNT_EXIST.getMessage(), true, true));
+            return;
+        }
+        String arg = args[1];
+
+        OfflinePlayer getOfflinePlayerByUUID = player.getServer().getOfflinePlayer(arg);
+        UUID getOfflinePlayerByUUIDUniqueId = getOfflinePlayerByUUID.getUniqueId();
+
+        if (!getOfflinePlayerByUUID.hasPlayedBefore()) {
+            player.sendMessage(Util.setMessage(Messages.BALANCE_GIVE_TARGET_DOSENT_EXIST.getMessage(), true, true));
+            return;
+        }
+        if (Configuration.getBalanceConfiguration().getConfigurationSection(getOfflinePlayerByUUIDUniqueId.toString()) == null) {
+            String message = Messages.BALANCE_GIVE_TARGET_IS_NOT_IN_BALANCE_FILE.getMessage().replace("%Balance_file_path%", Configuration.getBalanceFile().getPath());
+            player.sendMessage(Util.setMessage(message, true, true));
+            return;
+        }
+        if (args.length == 2) {
+            player.sendMessage(Util.setMessage(Messages.BALANCE_GIVE_AMOUNT_DOESNT_EXIST.getMessage(), true, true));
+            return;
+        }
+
+        try {
+            Integer.parseInt(args[2]);
+        } catch (NumberFormatException e) {
+            e.getStackTrace();
+            player.sendMessage(Util.setMessage(Messages.BALANCE_GIVE_AMOUNT_INVALID.getMessage(), true, true));
+        }
+        int amount = Integer.parseInt(args[2]);
+
+        String message = Messages.BALANCE_GIVE_SUCCESS.getMessage().replace("%target_display_name%", getOfflinePlayerByUUID.getName()).replace("%amount_given%", String.valueOf(amount));
+
+        ConfigurationSection targetConfigurationSection = Configuration.getBalanceConfiguration().getConfigurationSection(getOfflinePlayerByUUIDUniqueId.toString());
+        ConfigurationSection PlayerConfigurationSection = Configuration.getBalanceConfiguration().getConfigurationSection(player.getUniqueId().toString());
+
+        if (PlayerConfigurationSection.getInt("Money") < amount) {
+            player.sendMessage(Util.setMessage(Messages.BALANCE_GIVE_NOT_ENOUGH_FUNDS.getMessage(), true, true));
+            return;
+        }
+        PlayerConfigurationSection.set("Money", PlayerConfigurationSection.getInt("Money", 0) - amount);
+        targetConfigurationSection.set("Money", targetConfigurationSection.getInt("Money", 0) + amount);
+
+        player.sendMessage(Util.setMessage(message, true, true));
+        Configuration.saveConfiguration(Configuration.getBalanceFile(), Configuration.getBalanceConfiguration(), player);
+    }
+
     private void FetchedData(Player player){
         int Money = Configuration.getBalanceConfiguration().getConfigurationSection(player.getUniqueId().toString()).getInt("Money");
         uuid.getUUID().put(player.getUniqueId(), Money);
+        String balance = Messages.BALANCE_FETCHED_DATA.getMessage().replace("%hashmap_player%", uuid.getUUID().get(player.getUniqueId()).toString());
 
-        player.sendMessage(Util.setMessage(Messages.BALANCE_FETCHED_DATA.getMessage() + Messages.getBalance(player), true, true));
+        player.sendMessage(Util.setMessage(balance, true, true));
     }
     private void versionCheck(Player player) {
         UpdateChecker updateChecker = Util.getEconomyPlugin().getUpdateChecker();
