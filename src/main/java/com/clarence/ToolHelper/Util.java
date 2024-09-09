@@ -14,7 +14,7 @@ public class Util {
     public static String setMessage(String message, boolean isPlayerMessage, boolean isColored) {
         if (isPlayerMessage) {
             if (isColored) {
-                return ChatColor.translateAlternateColorCodes('&', "&b&l[" + economy.getName() + "] » " + message + ".");
+                return ChatColor.translateAlternateColorCodes('&', "&b[" + economy.getName() + "] » " + message + ".");
             } else {
                 return "[" + economy.getName() + "] » " + message + ".";
             }

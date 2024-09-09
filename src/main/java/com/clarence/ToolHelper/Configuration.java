@@ -36,8 +36,8 @@ public class Configuration {
 
         files.add(balanceFile); files.add(itemsFile);
 
-        saveConfiguration(balanceFile, balanceConfiguration);
-        saveConfiguration(itemsFile, itemsConfiguration);
+        saveConfiguration(balanceFile, balanceConfiguration, null);
+        saveConfiguration(itemsFile, itemsConfiguration, null);
     }
 
     private File getFile(String name) {
@@ -63,7 +63,7 @@ public class Configuration {
         fileConfiguration = YamlConfiguration.loadConfiguration(file);
         return fileConfiguration;
     }
-    public static void saveConfiguration(File file, FileConfiguration fileConfiguration) {
+    public static void saveConfiguration(File file, FileConfiguration fileConfiguration, Player player) {
         if (!EconomyPlugin.getDataFolder().exists()) {
             System.out.println(Util.setMessage("COULD NOT FIND FOLDER DIRECTORY", false, false));
             return;
@@ -82,6 +82,10 @@ public class Configuration {
         try {
             fileConfiguration.save(file);
             System.out.println(Util.setMessage("Saved " + file, false, false));
+
+            if (player != null) {
+                player.sendMessage(Util.setMessage("Saved " + file, false, false));
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -116,14 +120,14 @@ public class Configuration {
         ConfigurationSection configurationSection = Configuration.getBalanceConfiguration().createSection(String.valueOf(player.getUniqueId()));
         configurationSection.set("Name", player.getDisplayName());
         configurationSection.set("Money", 0);
-        Configuration.saveConfiguration(Configuration.getBalanceFile(), Configuration.getBalanceConfiguration());
+        Configuration.saveConfiguration(Configuration.getBalanceFile(), Configuration.getBalanceConfiguration(), player);
         player.sendMessage(Util.setMessage("Generated a new data for " + player.getDisplayName(), true, true));
     }
-    public static void GenerateNewItemData(Player player, Material material) {
+    public static void GenerateNewItemData(Player player, Material material, int itemPrice) {
         ConfigurationSection configurationSection = Configuration.getItemsConfiguration().createSection(material.name());
         configurationSection.set("Material", material.name());
-        configurationSection.set("Price", 0);
-        Configuration.saveConfiguration(Configuration.getItemsFile(), Configuration.getItemsConfiguration());
+        configurationSection.set("Price", itemPrice);
+        Configuration.saveConfiguration(Configuration.getItemsFile(), Configuration.getItemsConfiguration(), player);
         player.sendMessage(Util.setMessage("Generated a new data for " + material.name(), true, true));
     }
 }
