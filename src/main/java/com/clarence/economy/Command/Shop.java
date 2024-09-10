@@ -1,6 +1,7 @@
 package com.clarence.economy.Command;
 
 import com.clarence.ToolHelper.Configuration;
+import com.clarence.ToolHelper.Messages;
 import com.clarence.ToolHelper.Util;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
@@ -12,7 +13,6 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class Shop implements CommandExecutor {
@@ -27,11 +27,13 @@ public class Shop implements CommandExecutor {
             List<String> itemKeys = new ArrayList<>(Configuration.getItemsConfiguration().getKeys(false));
 
             if (itemKeys.isEmpty()) {
-                player.sendMessage(Util.setMessage("Shop items is empty", true, true));
+                player.sendMessage(Util.setMessage(Messages.SHOP_ITEM_EMPTY.getMessage(), true, true));
                 return true;
             }
 
-            player.sendMessage(Util.setMessage(Arrays.asList(itemKeys).toString(), true, true));
+            String message = Messages.SHOP_ITEMS.getMessage().replace("%Shop_items%", itemKeys.toString());
+
+            player.sendMessage(Util.setMessage(message, true, true));
             return true;
         }
 
@@ -49,7 +51,7 @@ public class Shop implements CommandExecutor {
                 addItemsToConfig(player, args);
                 break;
             case "help":
-                player.sendMessage(Util.setMessage("USAGE: buy | sell | check | add", true, true));
+                player.sendMessage(Util.setMessage(Messages.SHOP_HELP.getMessage(), true, true));
                 break;
         }
         return false;
@@ -57,30 +59,32 @@ public class Shop implements CommandExecutor {
 
     private void itemCheck(Player player, String[] args) {
         if (args.length == 1) {
-            player.sendMessage(Util.setMessage("Please specific which item to check", true, true));
+            player.sendMessage(Util.setMessage(Messages.SHOP_ITEM_CHECK_NOT_SPECIFY.getMessage(), true, true));
             return;
         }
 
         String arg = args[1];
 
         if (Configuration.getItemsConfiguration().getConfigurationSection(arg) == null) {
-            player.sendMessage(Util.setMessage("Item doesn't exist", true, true));
+            player.sendMessage(Util.setMessage(Messages.SHOP_ITEM_CHECK_NOT_FOUND.getMessage(), true, true));
             return;
         }
 
         ConfigurationSection configurationSection = Configuration.getItemsConfiguration().getConfigurationSection(arg);
+
         String itemMaterial = configurationSection.getString("Material");
         int itemPrice = configurationSection.getInt("Price");
 
-        String itemInfo = "Item material: &a" + itemMaterial + " &bItem price: &a$" + itemPrice + "/each";
+        String message = Messages.SHOP_ITEM_CHECK.getMessage().replace("%Shop_item_material%", itemMaterial).replace("%Shop_item_price%", String.valueOf(itemPrice));
 
-        player.sendMessage(Util.setMessage(itemInfo, true, true));
+        player.sendMessage(Util.setMessage(message, true, true));
 
 
     }
 
     private void addItemsToConfig(Player player, String[] args) {
         String itemPath = Configuration.getItemsFile().getPath();
+
         if (args.length == 1) {
             player.sendMessage(Util.setMessage("Please specific a material to add to " + itemPath, true, true));
             return;

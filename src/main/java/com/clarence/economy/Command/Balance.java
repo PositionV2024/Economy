@@ -62,13 +62,14 @@ public class Balance implements CommandExecutor {
         }
         String arg = args[1];
 
-        OfflinePlayer getOfflinePlayerByUUID = player.getServer().getOfflinePlayer(arg);
-        UUID getOfflinePlayerByUUIDUniqueId = getOfflinePlayerByUUID.getUniqueId();
+        OfflinePlayer getOfflinePlayer = player.getServer().getOfflinePlayer(arg);
+        UUID getOfflinePlayerByUUIDUniqueId = getOfflinePlayer.getUniqueId();
 
-        if (!getOfflinePlayerByUUID.hasPlayedBefore()) {
+        if (!getOfflinePlayer.hasPlayedBefore()) {
             player.sendMessage(Util.setMessage(Messages.BALANCE_GIVE_TARGET_DOSENT_EXIST.getMessage(), true, true));
             return;
         }
+
         if (Configuration.getBalanceConfiguration().getConfigurationSection(getOfflinePlayerByUUIDUniqueId.toString()) == null) {
             String message = Messages.BALANCE_GIVE_TARGET_IS_NOT_IN_BALANCE_FILE.getMessage().replace("%Balance_file_path%", Configuration.getBalanceFile().getPath());
             player.sendMessage(Util.setMessage(message, true, true));
@@ -78,7 +79,6 @@ public class Balance implements CommandExecutor {
             player.sendMessage(Util.setMessage(Messages.BALANCE_GIVE_AMOUNT_DOESNT_EXIST.getMessage(), true, true));
             return;
         }
-
         try {
             Integer.parseInt(args[2]);
         } catch (NumberFormatException e) {
@@ -87,19 +87,40 @@ public class Balance implements CommandExecutor {
         }
         int amount = Integer.parseInt(args[2]);
 
-        String message = Messages.BALANCE_GIVE_SUCCESS.getMessage().replace("%target_display_name%", getOfflinePlayerByUUID.getName()).replace("%amount_given%", String.valueOf(amount));
+        String message = Messages.BALANCE_GIVE_SUCCESS.getMessage().replace("%target_display_name%", getOfflinePlayer.getName()).replace("%amount_given%", String.valueOf(amount));
 
         ConfigurationSection targetConfigurationSection = Configuration.getBalanceConfiguration().getConfigurationSection(getOfflinePlayerByUUIDUniqueId.toString());
         ConfigurationSection PlayerConfigurationSection = Configuration.getBalanceConfiguration().getConfigurationSection(player.getUniqueId().toString());
 
-        if (PlayerConfigurationSection.getInt("Money") < amount) {
+        if (PlayerConfigurationSection.getInt("Money") < amount && !player.isOp()) {
             player.sendMessage(Util.setMessage(Messages.BALANCE_GIVE_NOT_ENOUGH_FUNDS.getMessage(), true, true));
             return;
         }
+        String targetMessage = Messages.BALANCE_GIVE_SUCCESS_TARGET_MESSAGE.getMessage().replace("%amount_given%", String.valueOf(amount));
+        Player target = player.getServer().getPlayerExact(arg);
+
+        if (player.isOp()) {
+            targetConfigurationSection.set("Money", targetConfigurationSection.getInt("Money", 0) + amount);
+
+            player.sendMessage(Util.setMessage(message, true, true));
+
+            if (target != null) {
+                target.sendMessage(Util.setMessage(targetMessage, true, true));
+            }
+
+            Configuration.saveConfiguration(Configuration.getBalanceFile(), Configuration.getBalanceConfiguration(), player);
+            return;
+        }
+
         PlayerConfigurationSection.set("Money", PlayerConfigurationSection.getInt("Money", 0) - amount);
         targetConfigurationSection.set("Money", targetConfigurationSection.getInt("Money", 0) + amount);
 
         player.sendMessage(Util.setMessage(message, true, true));
+
+        if (target != null) {
+            target.sendMessage(Util.setMessage(targetMessage, true, true));
+        }
+
         Configuration.saveConfiguration(Configuration.getBalanceFile(), Configuration.getBalanceConfiguration(), player);
     }
 
@@ -114,17 +135,20 @@ public class Balance implements CommandExecutor {
         UpdateChecker updateChecker = Util.getEconomyPlugin().getUpdateChecker();
         try {
             if (!updateChecker.isUpdateAvailable()) {
-                player.sendMessage(Util.setMessage(Colors.GRAY.getCode() +"Your current version is " + Colors.GREEN + updateChecker.getCurrentVersion(), true, true));
+                String message = Messages.UPDATECHECKER_NOT_UPDATE_FOUND.getMessage().replace("%current_version%", updateChecker.getCurrentVersion());
+                player.sendMessage(Util.setMessage(message, true, true));
                 return;
             }
-            player.sendMessage(Util.setMessage(Colors.GRAY.getCode() + "Your current version is " + Colors.GREEN.getCode() + updateChecker.getCurrentVersion() + "\n" + Colors.GRAY.getCode() + "Please download the newest version " + Colors.GREEN + updateChecker.getLatestVersion() + Colors.GRAY.getCode() + "here: " + Colors.GREEN.getCode() + updateChecker.getUpdateUrl(), true, true));
+            String message = Messages.UPDATECHECKER_UPDATE_FOUND.getMessage().replace("%latest_version_url%", updateChecker.getUpdateUrl());
+
+            player.sendMessage(Util.setMessage(message, true, true));
         } catch (CompletionException e) {
             player.sendMessage(Util.setMessage("COULD NOT FETCH THE LATEST UPDATE", true, true));
         }
     }
     private void clearBalance(Player player, String[] args) {
         if (args.length == 1) {
-            player.sendMessage(Util.setMessage(Colors.GRAY.getCode() + "USAGE: all | mine", true, true));
+            player.sendMessage(Util.setMessage(Messages.BALANCE_CLEAR_HELP.getMessage(), true, true));
             return;
         }
         List<String> balanceList = new ArrayList<>(Configuration.getBalanceConfiguration().getKeys(false));
@@ -138,13 +162,13 @@ public class Balance implements CommandExecutor {
                     configurationSection.set("Money", 0);
                 }
                 Configuration.saveConfiguration(Configuration.getBalanceFile(), Configuration.getBalanceConfiguration(), player);
-                player.sendMessage(Util.setMessage(Colors.GRAY.getCode() + "Cleared all balances", true, true));
+                player.sendMessage(Util.setMessage(Messages.BALANCE_CLEAR_ALL_BALANCES.getMessage(), true, true));
                 break;
             case "mine":
                 ConfigurationSection configurationSection = Configuration.getBalanceConfiguration().getConfigurationSection(String.valueOf(player.getUniqueId()));
                 configurationSection.set("Money", 0);
                 Configuration.saveConfiguration(Configuration.getBalanceFile(), Configuration.getBalanceConfiguration(), player);
-                player.sendMessage(Util.setMessage(Colors.GRAY.getCode()+"Cleared your balance", true, true));
+                player.sendMessage(Util.setMessage(Messages.BALANCE_CLEAR_YOUR_BALANCE.getMessage(), true, true));
                 break;
         }
     }
