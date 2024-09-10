@@ -124,8 +124,12 @@ public class Configuration {
         player.sendMessage(Util.setMessage("Generated a new data for " + player.getDisplayName(), true, true));
     }
     public static void GenerateNewItemData(Player player, Material material, int itemPrice) {
+        if (Configuration.getItemsConfiguration().getConfigurationSection(material.name()) != null) {
+            player.sendMessage(Util.setMessage("You have added this item before", true, true));
+            return;
+        }
         ConfigurationSection configurationSection = Configuration.getItemsConfiguration().createSection(material.name());
-        configurationSection.set("Material", material.name());
+        configurationSection.set("Name", material.name());
         configurationSection.set("Price", itemPrice);
         Configuration.saveConfiguration(Configuration.getItemsFile(), Configuration.getItemsConfiguration(), player);
         player.sendMessage(Util.setMessage("Generated a new data for " + material.name(), true, true));

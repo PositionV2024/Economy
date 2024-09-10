@@ -48,7 +48,7 @@ public class Shop implements CommandExecutor {
                 itemCheck(player, args);
                 break;
             case "add":
-                addItemsToConfig(player, args);
+                addItemsToItemsYml(player, args);
                 break;
             case "help":
                 player.sendMessage(Util.setMessage(Messages.SHOP_HELP.getMessage(), true, true));
@@ -82,42 +82,31 @@ public class Shop implements CommandExecutor {
 
     }
 
-    private void addItemsToConfig(Player player, String[] args) {
-        String itemPath = Configuration.getItemsFile().getPath();
+    private void addItemsToItemsYml(Player player, String[] args) {
+        try {
+            player.getInventory().getItemInMainHand().getItemMeta().getItemName();
+        } catch (NullPointerException e) {
+            player.sendMessage(Util.setMessage(Messages.ADD_ITEM_NO_ITEM_FOUND_IN_HAND.getMessage(), true, true));
+            return;
+        }
+
+        Material itemStack_Material = player.getInventory().getItemInMainHand().getData().getItemType();
 
         if (args.length == 1) {
-            player.sendMessage(Util.setMessage("Please specific a material to add to " + itemPath, true, true));
-            return;
-        }
-        String arg = args[1];
-
-        if (Configuration.getItemsConfiguration().getConfigurationSection(arg) != null) {
-            player.sendMessage(Util.setMessage("The item already exist", true, true));
-            return;
-        }
-
-        if (args.length == 2) {
-            player.sendMessage(Util.setMessage("Add a price to the item", true, true));
+            player.sendMessage(Util.setMessage("Please enter a price for this item", true, true));
             return;
         }
         try {
-            int itemPrice = Integer.valueOf(args[2]);
-        }catch (NumberFormatException e) {
-            e.getStackTrace();
-            player.sendMessage(Util.setMessage("Invalid price", true, true));
-        }
-        int itemPrice = Integer.valueOf(args[2]);
-
-        Material material = null;
-        try {
-            material = Material.valueOf(arg);
+            Integer.parseInt(args[1]);
         } catch (IllegalArgumentException e) {
             e.getStackTrace();
-            player.sendMessage(Util.setMessage("Please add a material to " + itemPath, true, true));
+            String message = Messages.ADD_ITEM_NO_ITEM_PRICE_FOUND.getMessage().replace("%item%", itemStack_Material.toString());
+            player.sendMessage(Util.setMessage(message, true, true));
             return;
         }
-        Configuration.GenerateNewItemData(player, material, itemPrice);
-        player.sendMessage(Util.setMessage("Added item &a" + arg + "&b with the price of &a$" + itemPrice + "/each &bin " + itemPath, true, true));
+        int itemPrice = Integer.parseInt(args[1]);
+
+        Configuration.GenerateNewItemData(player, itemStack_Material, itemPrice);
     }
 
     private void handleBuy(Player player, String[] args) {

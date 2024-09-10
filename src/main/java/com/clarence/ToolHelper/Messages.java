@@ -32,7 +32,10 @@ public enum Messages {
 
     SHOP_ITEM_CHECK_NOT_SPECIFY(Colors.GRAY.getCode() + "Please specific which item to check"),
     SHOP_ITEM_CHECK_NOT_FOUND(Colors.GRAY.getCode() + "Item doesn't exist"),
-    SHOP_ITEM_CHECK(Colors.GRAY.getCode() + "Item material: " +Colors.GREEN.getCode()+"%Shop_item_material%"+Colors.GRAY.getCode()+" Item price:" + Colors.GREEN.getCode()+" $%Shop_item_price%/each");
+    SHOP_ITEM_CHECK(Colors.GRAY.getCode() + "Item material: " +Colors.GREEN.getCode()+"%Shop_item_material%"+Colors.GRAY.getCode()+" Item price:" + Colors.GREEN.getCode()+" $%Shop_item_price%/each"),
+
+    ADD_ITEM_NO_ITEM_FOUND_IN_HAND(Colors.GRAY.getCode() + "Please have an item in your hand"),
+    ADD_ITEM_NO_ITEM_PRICE_FOUND(Colors.GRAY.getCode() + "Please add a price to the item %item%");
 
     private String message;
     Messages (String message) {
