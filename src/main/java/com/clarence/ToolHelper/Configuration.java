@@ -122,7 +122,7 @@ public class Configuration {
         Configuration.saveConfiguration(Configuration.getBalanceFile(), Configuration.getBalanceConfiguration(), player);
         player.sendMessage(Util.setMessage("Generated a new data for " + player.getDisplayName(), true, true));
     }
-    public static void GenerateNewItemData(Player player, String material, int itemPrice) {
+    public static void GenerateNewItemData(Player player, String material, int itemBuyPrice, int itemSellPrice) {
         if (getItemsConfiguration().getConfigurationSection(material) != null) {
             String message = Messages.CONFIGURATION_ITEM_HAS_ALREADY_BEEN_ADDED.getMessage().replace("%Shop_item_material%", material);
             player.sendMessage(Util.setMessage(message, true, true));
@@ -130,10 +130,12 @@ public class Configuration {
         }
         ConfigurationSection configurationSection = Configuration.getItemsConfiguration().createSection(material);
         configurationSection.set("Name", material);
-        configurationSection.set("Price", itemPrice);
-        String message = Messages.CONFIGURATION_ITEM_ADDED.getMessage().replace("%Shop_item_material%", material);
+        configurationSection.set("Price", itemBuyPrice);
+        configurationSection.set("Sell", itemSellPrice);
 
-        Configuration.saveConfiguration(Configuration.getItemsFile(), Configuration.getItemsConfiguration(), player);
+        String message = Messages.CONFIGURATION_ITEM_ADDED.getMessage().replace("%Shop_item_material%", material).replace("%Shop_item_price%", String.valueOf(itemBuyPrice));
+
         player.sendMessage(Util.setMessage(message, true, true));
+        Configuration.saveConfiguration(Configuration.getItemsFile(), Configuration.getItemsConfiguration(), player);
     }
 }

@@ -73,9 +73,11 @@ public class Shop implements CommandExecutor {
         ConfigurationSection configurationSection = Configuration.getItemsConfiguration().getConfigurationSection(arg);
 
         String itemMaterial = configurationSection.getString("Name");
-        int itemPrice = configurationSection.getInt("Price");
+        int itemBuyPrice = configurationSection.getInt("Price");
+        int itemSellPrice = configurationSection.getInt("Sell");
 
-        String message = Messages.SHOP_ITEM_CHECK.getMessage().replace("%Shop_item_material%", itemMaterial).replace("%Shop_item_price%", String.valueOf(itemPrice));
+
+        String message = Messages.SHOP_ITEM_CHECK.getMessage().replace("%Shop_item_material%", itemMaterial).replace("%Shop_item_price%", String.valueOf(itemBuyPrice)).replace("%Shop_item_sell_price%", String.valueOf(itemSellPrice));
 
         player.sendMessage(Util.setMessage(message, true, true));
 
@@ -90,28 +92,42 @@ public class Shop implements CommandExecutor {
             return;
         }
 
-        String itemStack_Material = player.getInventory().getItemInMainHand().getType().name();
+        String itemStack_Type_name = player.getInventory().getItemInMainHand().getType().name();
 
         if (args.length == 1) {
-            player.sendMessage(Util.setMessage("Please enter a price for this item", true, true));
+            player.sendMessage(Util.setMessage(Messages.CONFIGURATION_ITEM_ADD_BUY_PRICE.getMessage(), true, true));
             return;
         }
         try {
             Integer.parseInt(args[1]);
         } catch (IllegalArgumentException e) {
             e.getStackTrace();
-            String message = Messages.ADD_ITEM_NO_ITEM_PRICE_FOUND.getMessage().replace("%item%", itemStack_Material);
+            String message = Messages.ADD_ITEM_NO_ITEM_PRICE_FOUND.getMessage().replace("%item%", itemStack_Type_name);
             player.sendMessage(Util.setMessage(message, true, true));
             return;
         }
-        int itemPrice = Integer.parseInt(args[1]);
 
-        Configuration.GenerateNewItemData(player, itemStack_Material, itemPrice);
+        if (args.length == 2) {
+            player.sendMessage(Util.setMessage(Messages.CONFIGURATION_ITEM_ADD_SELL_PRICE.getMessage(), true, true));
+            return;
+        }
+
+        try {
+            Integer.parseInt(args[2]);
+        } catch (IllegalArgumentException e) {
+            e.getStackTrace();
+            player.sendMessage(Util.setMessage(Messages.CONFIGURATION_ITEM_ADD_SELL_PRICE.getMessage(), true, true));
+        }
+
+        int itemBuyPrice = Integer.parseInt(args[1]);
+        int itemSellPrice = Integer.parseInt(args[2]);
+
+        Configuration.GenerateNewItemData(player, itemStack_Type_name, itemBuyPrice, itemSellPrice);
     }
 
     private void handleBuy(Player player, String[] args) {
         if (args.length == 1) {
-            player.sendMessage(Util.setMessage("Please specify the item you want to buy", true, true));
+            player.sendMessage(Util.setMessage(Messages.BUY_ITEM_NO_ITEM_FOUND.getMessage(), true, true));
             return;
         }
         String item = args[1];
@@ -121,12 +137,12 @@ public class Shop implements CommandExecutor {
             Material.valueOf(configurationSection.getString("Name"));
         } catch (NullPointerException e) {
             e.getStackTrace();
-            player.sendMessage(Util.setMessage("MATERIAL CANNOT BE FOUND", true, true));
+            player.sendMessage(Util.setMessage(Messages.BUY_ITEM_NO_ITEM_FOUND_IN_CONFIGURATION.getMessage(), true, true));
             return;
         }
 
         if (args.length == 2) {
-            player.sendMessage(Util.setMessage("Please specify the quality you want to buy", true, true));
+            player.sendMessage(Util.setMessage(Messages.BUY_ITEM_AMOUNT.getMessage(), true, true));
             return;
         }
 
@@ -134,7 +150,6 @@ public class Shop implements CommandExecutor {
             int quality = Integer.parseInt(args[2]);
         } catch (IllegalArgumentException e) {
             e.getStackTrace();
-            player.sendMessage(Util.setMessage("INVALID QUAlITY", true, true));
             return;
         }
 
@@ -148,7 +163,8 @@ public class Shop implements CommandExecutor {
 
         if (itemQuantity > 0) {
             if (balanceConfigurationSection.getInt("Money") < quantityPrice && !player.isOp()) {
-                player.sendMessage(Util.setMessage("You have insufficient funds to buy " + item.toLowerCase(), true, true));
+                String message = Messages.BUY_ITEM_NOT_ENOUGH_FUNDS.getMessage().replace("%Shop_item_material%", item);
+                player.sendMessage(Util.setMessage(message, true, true));
                 return;
             }
             ItemStack itemStack = Util.getItemStack(Material.matchMaterial(item), itemQuantity);
@@ -162,7 +178,8 @@ public class Shop implements CommandExecutor {
             balanceConfigurationSection.set("Money", balanceConfigurationSection.getInt("Money", 0) - quantityPrice);
 
             player.getInventory().addItem(itemStack);
-            player.sendMessage(Util.setMessage("You bought x" + itemQuantity + " " + item + " for $" + quantityPrice, true, true));
+            String message = Messages.BUY_ITEM_SUCCESS.getMessage().replace("%item_amount%", String.valueOf(quantityPrice)).replace("%Shop_item_material%", item).replace("%Shop_item_price%", String.valueOf(quantityPrice));
+            player.sendMessage(Util.setMessage(message, true, true));
 
             Configuration.saveConfiguration(Configuration.getBalanceFile(), Configuration.getBalanceConfiguration(), player);
         } else {
