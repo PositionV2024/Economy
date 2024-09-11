@@ -1,7 +1,9 @@
 package com.clarence.ToolHelper;
 
 public enum Messages {
-    CONSOLE("CAN'T DO THIS THROUGH CONSOLE"),
+    CONSOLE("\\u001B[0m CAN'T DO THIS THROUGH CONSOLE"),
+    CONFIGURATION_ITEM_HAS_ALREADY_BEEN_ADDED(Colors.GREEN.getCode() + "%Shop_item_material%"+Colors.GRAY.getCode()+" has already been added"),
+    CONFIGURATION_ITEM_ADDED(Colors.GRAY.getCode() + "Generated a new data for "+Colors.GREEN.getCode() + "%Shop_item_material%"),
 
     BALANCE_USAGE(Colors.GRAY.getCode() + "USAGE: balance | give | clear | version | reload"),
     BALANCE_HELP(Colors.GRAY.getCode() + "USAGE: /balance help"),

@@ -19,7 +19,7 @@ public class Shop implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String s, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(Util.setMessage("CAN'T DO THIS THROUGH CONSOLE", false, false));
+            sender.sendMessage(Util.setMessage(Messages.CONSOLE.getMessage(), false, false));
             return true;
         }
 
@@ -38,17 +38,17 @@ public class Shop implements CommandExecutor {
         }
 
         switch (args[0].toLowerCase()) {
-            case "buy":
-                handleBuy(player, args);
-                break;
-            case "sell":
-                handleSell(player, args);
-                break;
             case "check":
                 itemCheck(player, args);
                 break;
             case "add":
                 addItemsToItemsYml(player, args);
+                break;
+            case "buy":
+                handleBuy(player, args);
+                break;
+            case "sell":
+                handleSell(player, args);
                 break;
             case "help":
                 player.sendMessage(Util.setMessage(Messages.SHOP_HELP.getMessage(), true, true));
@@ -72,7 +72,7 @@ public class Shop implements CommandExecutor {
 
         ConfigurationSection configurationSection = Configuration.getItemsConfiguration().getConfigurationSection(arg);
 
-        String itemMaterial = configurationSection.getString("Material");
+        String itemMaterial = configurationSection.getString("Name");
         int itemPrice = configurationSection.getInt("Price");
 
         String message = Messages.SHOP_ITEM_CHECK.getMessage().replace("%Shop_item_material%", itemMaterial).replace("%Shop_item_price%", String.valueOf(itemPrice));
@@ -84,13 +84,13 @@ public class Shop implements CommandExecutor {
 
     private void addItemsToItemsYml(Player player, String[] args) {
         try {
-            player.getInventory().getItemInMainHand().getItemMeta().getItemName();
+                player.getInventory().getItemInMainHand().getItemMeta().getItemName();
         } catch (NullPointerException e) {
             player.sendMessage(Util.setMessage(Messages.ADD_ITEM_NO_ITEM_FOUND_IN_HAND.getMessage(), true, true));
             return;
         }
 
-        Material itemStack_Material = player.getInventory().getItemInMainHand().getData().getItemType();
+        String itemStack_Material = player.getInventory().getItemInMainHand().getType().name();
 
         if (args.length == 1) {
             player.sendMessage(Util.setMessage("Please enter a price for this item", true, true));
@@ -100,7 +100,7 @@ public class Shop implements CommandExecutor {
             Integer.parseInt(args[1]);
         } catch (IllegalArgumentException e) {
             e.getStackTrace();
-            String message = Messages.ADD_ITEM_NO_ITEM_PRICE_FOUND.getMessage().replace("%item%", itemStack_Material.toString());
+            String message = Messages.ADD_ITEM_NO_ITEM_PRICE_FOUND.getMessage().replace("%item%", itemStack_Material);
             player.sendMessage(Util.setMessage(message, true, true));
             return;
         }
@@ -114,11 +114,11 @@ public class Shop implements CommandExecutor {
             player.sendMessage(Util.setMessage("Please specify the item you want to buy", true, true));
             return;
         }
-        String arg = args[1];
-        try {
-            ConfigurationSection configurationSection = Configuration.getItemsConfiguration().getConfigurationSection(arg);
+        String item = args[1];
 
-            Material.valueOf(String.valueOf(configurationSection.getString("Material")));
+        try {
+            ConfigurationSection configurationSection = Configuration.getItemsConfiguration().getConfigurationSection(item);
+            Material.valueOf(configurationSection.getString("Name"));
         } catch (NullPointerException e) {
             e.getStackTrace();
             player.sendMessage(Util.setMessage("MATERIAL CANNOT BE FOUND", true, true));
@@ -132,13 +132,13 @@ public class Shop implements CommandExecutor {
 
         try {
             int quality = Integer.parseInt(args[2]);
-        } catch (NumberFormatException e) {
+        } catch (IllegalArgumentException e) {
             e.getStackTrace();
             player.sendMessage(Util.setMessage("INVALID QUAlITY", true, true));
             return;
         }
 
-        ConfigurationSection ItemsConfigurationSection = Configuration.getItemsConfiguration().getConfigurationSection(arg);
+        ConfigurationSection ItemsConfigurationSection = Configuration.getItemsConfiguration().getConfigurationSection(item);
         ConfigurationSection balanceConfigurationSection = Configuration.getBalanceConfiguration().getConfigurationSection(player.getUniqueId().toString());
 
         int itemQuantity = Integer.parseInt(args[2]);
@@ -146,21 +146,28 @@ public class Shop implements CommandExecutor {
 
         int quantityPrice = price * itemQuantity;
 
-        if (itemQuantity != 0) {
-            if (balanceConfigurationSection.getInt("Money") < quantityPrice) {
-                player.sendMessage(Util.setMessage("You have insufficient funds to buy " + arg.toLowerCase(), true, true));
+        if (itemQuantity > 0) {
+            if (balanceConfigurationSection.getInt("Money") < quantityPrice && !player.isOp()) {
+                player.sendMessage(Util.setMessage("You have insufficient funds to buy " + item.toLowerCase(), true, true));
                 return;
             }
-            ItemStack itemStack = Util.getItemStack(Material.matchMaterial(args[1]), itemQuantity, arg, "");
-            player.getInventory().addItem(itemStack);
-            int Money = balanceConfigurationSection.getInt("Money", 0) - quantityPrice;
-            balanceConfigurationSection.set("Money", Money);
-            player.sendMessage(Util.setMessage("You bought x" + itemQuantity + " " + arg + " for $" + quantityPrice, true, true));
-        } else {
-            player.sendMessage(Util.setMessage("You cannot buy 0 " + arg, true, true));
-        }
+            ItemStack itemStack = Util.getItemStack(Material.matchMaterial(item), itemQuantity);
 
-        Configuration.saveConfiguration(Configuration.getBalanceFile(), Configuration.getBalanceConfiguration(), player);
+            if (player.isOp()) {
+                player.getInventory().addItem(itemStack);
+                player.sendMessage(Util.setMessage("You spawned in x" + itemQuantity + " " + item, true, true));
+                return;
+            }
+
+            balanceConfigurationSection.set("Money", balanceConfigurationSection.getInt("Money", 0) - quantityPrice);
+
+            player.getInventory().addItem(itemStack);
+            player.sendMessage(Util.setMessage("You bought x" + itemQuantity + " " + item + " for $" + quantityPrice, true, true));
+
+            Configuration.saveConfiguration(Configuration.getBalanceFile(), Configuration.getBalanceConfiguration(), player);
+        } else {
+            player.sendMessage(Util.setMessage("You cannot buy less then x0 " + item, true, true));
+        }
     }
     private void handleSell(Player player, String[] args) {
         try {
@@ -171,7 +178,6 @@ public class Shop implements CommandExecutor {
             return;
         }
         ItemStack itemInMainHandItemStack = player.getInventory().getItemInMainHand();
-        player.sendMessage(Util.setMessage(itemInMainHandItemStack.getType().toString(), true, true));
 
         String itemName = itemInMainHandItemStack.getItemMeta().getItemName();
 

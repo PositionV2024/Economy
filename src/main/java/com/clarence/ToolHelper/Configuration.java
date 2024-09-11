@@ -1,7 +1,6 @@
 package com.clarence.ToolHelper;
 
 import com.clarence.economy.Economy;
-import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -123,15 +122,18 @@ public class Configuration {
         Configuration.saveConfiguration(Configuration.getBalanceFile(), Configuration.getBalanceConfiguration(), player);
         player.sendMessage(Util.setMessage("Generated a new data for " + player.getDisplayName(), true, true));
     }
-    public static void GenerateNewItemData(Player player, Material material, int itemPrice) {
-        if (Configuration.getItemsConfiguration().getConfigurationSection(material.name()) != null) {
-            player.sendMessage(Util.setMessage("You have added this item before", true, true));
+    public static void GenerateNewItemData(Player player, String material, int itemPrice) {
+        if (getItemsConfiguration().getConfigurationSection(material) != null) {
+            String message = Messages.CONFIGURATION_ITEM_HAS_ALREADY_BEEN_ADDED.getMessage().replace("%Shop_item_material%", material);
+            player.sendMessage(Util.setMessage(message, true, true));
             return;
         }
-        ConfigurationSection configurationSection = Configuration.getItemsConfiguration().createSection(material.name());
-        configurationSection.set("Name", material.name());
+        ConfigurationSection configurationSection = Configuration.getItemsConfiguration().createSection(material);
+        configurationSection.set("Name", material);
         configurationSection.set("Price", itemPrice);
+        String message = Messages.CONFIGURATION_ITEM_ADDED.getMessage().replace("%Shop_item_material%", material);
+
         Configuration.saveConfiguration(Configuration.getItemsFile(), Configuration.getItemsConfiguration(), player);
-        player.sendMessage(Util.setMessage("Generated a new data for " + material.name(), true, true));
+        player.sendMessage(Util.setMessage(message, true, true));
     }
 }

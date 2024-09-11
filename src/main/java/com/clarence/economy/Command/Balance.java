@@ -32,17 +32,17 @@ public class Balance implements CommandExecutor {
         }
 
         switch (args[0].toLowerCase()) {
+            case "give":
+                giveBalance(player, args);
+                break;
             case "version":
                 versionCheck(player);
-                break;
-            case "reload":
-                Configuration.reloadFiles(player);
                 break;
             case "clear":
                 clearBalance(player, args);
                 break;
-            case "give":
-                giveBalance(player, args);
+            case "reload":
+                Configuration.reloadFiles(player);
                 break;
             case "help":
                 player.sendMessage(Util.setMessage(Messages.BALANCE_USAGE.getMessage(), true, true));
