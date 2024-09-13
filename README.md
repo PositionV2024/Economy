@@ -1,5 +1,5 @@
 # Economy
-Economy is a Minecraft plugin that enables players to have in-game currency that players can use to purchase and sell items. Everything can be customised through items.yml.
+Economy is a Minecraft plugin that enables players to have in-game currency that players can use to purchase and sell items. Customise items prices and more.
 ## Features
 ### xxxx
 xxxx xx xxxx xxxx
