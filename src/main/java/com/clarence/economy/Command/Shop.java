@@ -178,40 +178,46 @@ public class Shop implements CommandExecutor {
             balanceConfigurationSection.set("Money", balanceConfigurationSection.getInt("Money", 0) - quantityPrice);
 
             player.getInventory().addItem(itemStack);
-            String message = Messages.BUY_ITEM_SUCCESS.getMessage().replace("%item_amount%", String.valueOf(quantityPrice)).replace("%Shop_item_material%", item).replace("%Shop_item_price%", String.valueOf(quantityPrice));
+            String message = Messages.BUY_ITEM_SUCCESS.getMessage().replace("%item_amount%", String.valueOf(itemQuantity)).replace("%Shop_item_material%", item).replace("%Shop_item_price%", String.valueOf(quantityPrice));
             player.sendMessage(Util.setMessage(message, true, true));
 
             Configuration.saveConfiguration(Configuration.getBalanceFile(), Configuration.getBalanceConfiguration(), player);
         } else {
-            player.sendMessage(Util.setMessage("You cannot buy less then x0 " + item, true, true));
+            String message = Messages.BUY_ITEM_LESS_THEN_MIN_QUANTITY.getMessage().replace("%Shop_item_material%", item);
+            player.sendMessage(Util.setMessage(message, true, true));
         }
     }
     private void handleSell(Player player, String[] args) {
-        try {
-            player.getInventory().getItemInMainHand().getItemMeta().getItemName();
-        } catch (NullPointerException e) {
-            e.getStackTrace();
-            player.sendMessage(Util.setMessage("Please place the item you want to sell in your hand", true, true));
+        if (Configuration.getItemsConfiguration().getConfigurationSection(player.getInventory().getItemInMainHand().getType().name()) == null){
+            String message = Messages.SELL_ITEM_NO_ITEM_IN_CONFIGURATION.getMessage().replace("%item_path%", Configuration.getItemsFile().getPath());
+            player.sendMessage(Util.setMessage(message, true, true));
             return;
         }
+
         ItemStack itemInMainHandItemStack = player.getInventory().getItemInMainHand();
 
-        String itemName = itemInMainHandItemStack.getItemMeta().getItemName();
+        String itemName = itemInMainHandItemStack.getType().name();
 
         if (args.length == 1) {
-            player.sendMessage(Util.setMessage("Please specify the quality you want to sell", true, true));
+            player.sendMessage(Util.setMessage(Messages.SELL_ITEM_NO_ITEM_QUANTITY.getMessage(), true, true));
             return;
         }
 
         try {
             Integer.parseInt(args[1]);
-        } catch (NumberFormatException e) {
+        } catch (IllegalArgumentException e) {
             e.getStackTrace();
-            player.sendMessage(Util.setMessage("INVALID QUAlITY", true, true));
+            player.sendMessage(Util.setMessage(Messages.SELL_ITEM_NO_ITEM_QUANTITY.getMessage(), true, true));
             return;
         }
 
         int itemQuantity = Integer.parseInt(args[1]);
+
+        if (itemQuantity < 0) {
+            player.sendMessage(Util.setMessage("Item sold cannot be lower then 0", true, true));
+            return;
+        }
+
         int finalAmount = itemInMainHandItemStack.getAmount() - itemQuantity;
 
         if (itemInMainHandItemStack.getAmount() < itemQuantity) {
@@ -219,17 +225,17 @@ public class Shop implements CommandExecutor {
             return;
         }
 
+        ConfigurationSection cs = Configuration.getItemsConfiguration().getConfigurationSection(itemName);
+        int itemPrice = cs.getInt("Sell");
+        int ItemMultiplier = itemQuantity * itemPrice;
+
         itemInMainHandItemStack.setAmount(finalAmount);
 
         player.sendMessage(Util.setMessage("You have sold x" + itemQuantity + " " +  itemName, true, true));
         ConfigurationSection configurationSection = Configuration.getBalanceConfiguration().getConfigurationSection(String.valueOf(player.getUniqueId()));
-        int money = getMoney(configurationSection, player, itemQuantity);
+        int money = configurationSection.getInt("Money", 0) + ItemMultiplier;
         configurationSection.set("Money", money);
         Configuration.saveConfiguration(Configuration.getBalanceFile(), Configuration.getBalanceConfiguration(), player);
-    }
-    private int getMoney(ConfigurationSection configurationSection, Player player, int value) {
-        int money = configurationSection.getInt("Money", 0) + value;
-        player.sendMessage(Util.setMessage("You have been given $" + value, true, true));
-        return money;
+        player.sendMessage(Util.setMessage("You have been given $" + ItemMultiplier, true, true));
     }
 }

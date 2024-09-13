@@ -2,6 +2,7 @@ package com.clarence.ToolHelper;
 
 public enum Messages {
     CONSOLE("\\u001B[0m CAN'T DO THIS THROUGH CONSOLE"),
+
     CONFIGURATION_ITEM_HAS_ALREADY_BEEN_ADDED(Colors.GREEN.getCode() + "%Shop_item_material%"+Colors.GRAY.getCode()+" has already been added"),
     CONFIGURATION_ITEM_ADD_BUY_PRICE(Colors.GRAY.getCode() + "Please enter a price for this item"),
     CONFIGURATION_ITEM_ADD_SELL_PRICE(Colors.GRAY.getCode() + "Please enter how much you want this item to be sold for"),
@@ -43,9 +44,14 @@ public enum Messages {
 
     BUY_ITEM_NO_ITEM_FOUND(Colors.GRAY.getCode() + "Please specify the item you want to buy"),
     BUY_ITEM_AMOUNT(Colors.GRAY.getCode() + "Please specify the quality you want to buy"),
-    BUY_ITEM_NOT_ENOUGH_FUNDS("You have insufficient funds to buy "+ Colors.GREEN.getCode()+"%Shop_item_material%"),
+    BUY_ITEM_NOT_ENOUGH_FUNDS(Colors.GRAY.getCode() + "You have insufficient funds to buy "+ Colors.GREEN.getCode()+"%Shop_item_material%"),
     BUY_ITEM_SUCCESS(Colors.GRAY.getCode()+"You bought "+Colors.GREEN.getCode()+"x%item_amount% %Shop_item_material% "+Colors.GRAY.getCode()+"for "+Colors.GREEN.getCode()+"$%Shop_item_price%"),
-    BUY_ITEM_NO_ITEM_FOUND_IN_CONFIGURATION(Colors.GRAY.getCode() +"MATERIAL CANNOT BE FOUND");
+    BUY_ITEM_LESS_THEN_MIN_QUANTITY(Colors.GRAY.getCode() + "You cannot buy less then " +Colors.GREEN.getCode() + "x0 %Shop_item_material%"),
+    BUY_ITEM_NO_ITEM_FOUND_IN_CONFIGURATION(Colors.GRAY.getCode() +"MATERIAL CANNOT BE FOUND"),
+
+    SELL_ITEM_NO_ITEM_IN_CONFIGURATION(Colors.GRAY.getCode() + "Item doesn't exist in %item_path%"),
+    SELL_ITEM_NO_ITEM_QUANTITY(Colors.GRAY.getCode() + "Please specify the quality you want to sell"),
+    SELL_ITEM_INVALID_QUANTITY(Colors.GRAY.getCode() +"INVALID QUAlITY");
 
     private String message;
     Messages (String message) {
